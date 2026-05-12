@@ -1,55 +1,72 @@
 import { useEffect, useState } from "react";
 import { Search, UserPlus, FileDown, Trash2 } from "lucide-react";
 import { useNavigate, Link } from "react-router";
+import api from "../../services/api";
 
-const patientsData = [
-  {
-    id: "1",
-    full_name: "Juan Pérez",
-    document_id: "12345678",
-    gender: "Masculino",
-    blood_type: "O+",
-    diagnosis: "Diabetes tipo 2",
-    created_at: "2026-05-03T10:00:00Z",
-  },
-  {
-    id: "2",
-    full_name: "María Gómez",
-    document_id: "87654321",
-    gender: "Femenino",
-    blood_type: "A-",
-    diagnosis: "Hipertensión",
-    created_at: "2026-05-07T12:30:00Z",
-  },
-  {
-    id: "3",
-    full_name: "Carlos Rodríguez",
-    document_id: "11223344",
-    gender: "Masculino",
-    blood_type: "B+",
-    diagnosis: "Asma",
-    created_at: "2026-05-05T14:15:00Z",
-  },
-];
+interface Patient {
+  id: number | string;
+  name?: string;
+  last_name?: string;
+  age?: number;
+  birth_date?: string;
+  cedula?: string;
+  gender?: string;
+  phone?: string;
+}
 
 function Patients() {
   const navigate = useNavigate();
-  const [list, setList] = useState(patientsData);
+  const [list, setList] = useState<Patient[]>([]);
   const [q, setQ] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchPacients();
+  }, []);
+
+  const fetchPacients = async () => {
+    setLoading(true);
+
+    try {
+      const response = await api.get('/pacients');
+      const data = response.data;
+      const patients = Array.isArray(data)
+        ? data
+        : data.pacients || data.patients || data.results || data.data || []; 
+
+      setList(patients);
+      console.log('Pacientes cargados:', patients);
+    } catch (error: any) {
+      console.error('Error en la solicitud de pacientes:', error);
+    } finally {
+      setLoading(false);
+    }
+  }
 
   const filtered = list.filter((p) =>
-    p.full_name.toLowerCase().includes(q.toLowerCase()) ||
-    p.document_id.includes(q)
+    p.name?.toLowerCase().includes(q.toLowerCase()) ||
+    p.cedula?.includes(q)
   );
 
-  const remove = (id: string) => {
+  const remove = async (id: string) => {
+    const confirmed = window.confirm("¿Estás seguro de que deseas eliminar este paciente?");
+    if (!confirmed) return;
+
+    const response = await api.delete(`/pacients/${id}`)
+
+    if (response.status === 204) {
+      alert("Paciente eliminado exitosamente.");
+    } else {
+      alert("Error al eliminar paciente.");
+      return;
+    }
+
     setList(list.filter((p) => p.id !== id));
   };
 
   const report = (patient: any) => {
     // Simular descarga de PDF
-    alert(`Generando reporte para ${patient.full_name}`);
+    alert(`Generando reporte para ${patient.name} ${patient.last_name}`);
   };
 
   return (
@@ -61,7 +78,7 @@ function Patients() {
         </div>
         <Link
           to="/dashboard/patients/new"
-          className="inline-flex items-center rounded-full bg-primary px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-primary/90"
+          className="bg-[#3b82f6] inline-flex items-center rounded-full px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-primary/90"
         >
           <UserPlus className="h-4 w-4 mr-2" />
           Nuevo
@@ -89,19 +106,19 @@ function Patients() {
                 onClick={() => navigate(`/dashboard/patients/${p.id}`)}
                 className="h-12 w-12 rounded-full bg-primary-soft text-primary grid place-items-center font-bold shrink-0"
               >
-                {p.full_name.split(" ").map((n) => n[0]).slice(0, 2).join("")}
+                {p.name?.split(" ").map((n) => n[0]).slice(0, 2).join("")}
               </button>
               <button
                 onClick={() => navigate(`/dashboard/patients/${p.id}`)}
                 className="flex-1 min-w-0 text-left"
               >
-                <div className="font-semibold">{p.full_name}</div>
+                <div className="font-semibold">{p.name} {p.last_name}</div>
                 <div className="text-xs text-muted-foreground truncate">
-                  CC {p.document_id} · {p.gender} · {p.blood_type} · {p.diagnosis || "Sin diagnóstico"}
+                    C.I: {p.cedula} · Genero: {p.gender} · Telefono: {p.phone} 
                 </div>
               </button>
               <div className="hidden md:flex flex-col items-end text-xs text-muted-foreground">
-                <span>{new Date(p.created_at).toLocaleDateString("es-VE")}</span>
+                <span>{(p.birth_date)}</span>
               </div>
               <div className="flex gap-2">
                 <button
@@ -111,7 +128,7 @@ function Patients() {
                   <FileDown className="h-4 w-4 mr-1" /> PDF
                 </button>
                 <button
-                  onClick={() => remove(p.id)}
+                  onClick={() => remove(p.id as string)}
                   className="inline-flex items-center justify-center rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-red-50 hover:text-red-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-950 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 text-red-600"
                 >
                   <Trash2 className="h-4 w-4" />

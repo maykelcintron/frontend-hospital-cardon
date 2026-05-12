@@ -9,6 +9,7 @@ const Register = () => {
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
     const [confirmPassword, setConfirmPassword] = useState('')
+    const [role, setRole] = useState('')
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState('')
     const navigate = useNavigate()
@@ -17,7 +18,7 @@ const Register = () => {
       event.preventDefault()
       setLoading(true)
 
-      if(!fullName || !email || !password || !confirmPassword) {
+      if(!fullName || !email || !password || !confirmPassword || !role) {
         setError('Por favor, completa todos los campos.')
         setLoading(false)
         return
@@ -30,7 +31,7 @@ const Register = () => {
           return
         }
         
-        const response = await api.post('/auth/register', { username: fullName, email, password })
+        const response = await api.post('/auth/register', { username: fullName, email, password, role })
 
         if (response.status === 200) {
           navigate('/dashboard')
@@ -146,6 +147,27 @@ const Register = () => {
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     placeholder="••••••••" 
                     className="flex h-10 w-full pl-9 rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm ring-offset-white file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-zinc-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-950 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                />
+            </div>
+          </div>
+
+          {/* Rol escribir */}
+          <div className="space-y-2">
+            <label
+                htmlFor="role"
+                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-zinc-950"
+            >
+                Rol
+            </label>
+            <div className="relative">
+              <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <input
+                    type="text"
+                    id="role"
+                    value={role}
+                    onChange={(e) => setRole(e.target.value)}
+                    placeholder='Bionalista'
+                    className="flex h-10 w-full pl-9 rounded-md border border-zinc-200 bg-white/50 px-3 py-2 text-sm ring-offset-white file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-zinc-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-950 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                 />
             </div>
           </div>

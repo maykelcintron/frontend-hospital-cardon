@@ -10,6 +10,8 @@ import Dashboard from './components/dashboard/Index.tsx'
 import Home from './components/dashboard/Home.tsx'
 import Patients from './components/dashboard/Patients.tsx'
 import ProfilePage from './components/dashboard/Profile.tsx'
+import CreatePacient from './components/dashboard/CreatePacient.tsx'
+import CreateExam from './components/dashboard/CreateExam.tsx'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
@@ -21,6 +23,8 @@ createRoot(document.getElementById('root')!).render(
         <Route path="/dashboard" element={<Dashboard />}>
           <Route index element={<Home />} />
           <Route path="patients" element={<Patients />} />
+          <Route path="patients/new" element={<CreatePacient />} />
+          <Route path="exams" element={<CreateExam />} />
           <Route path="profile" element={<ProfilePage />} />
         </Route>
         <Route path="*" element={<NotFound />} />

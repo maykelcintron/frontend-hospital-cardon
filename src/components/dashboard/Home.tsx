@@ -1,39 +1,50 @@
 import { Activity, ArrowRight, FileText, TrendingUp, UserPlus, Users } from "lucide-react"
 import { Link } from "react-router"
+import api from "../../services/api"
+import { useEffect, useState } from "react"
 
-const user = {
-  full_name: "Dra. Natalia Méndez",
-  role: "Bioanalista",
-  hospital: "Hospital Cardón",
+interface Patient {
+  id: number | string;
+  name?: string;
+  last_name?: string;
+  age?: number;
+  birth_date?: string;
+  cedula?: string;
+  gender?: string;
+  phone?: string;
 }
 
-const list = [
-  {
-    id: "1",
-    full_name: "Juan Pérez",
-    document_id: "12345678",
-    diagnosis: "Diabetes tipo 2",
-    blood_type: "O+",
-    created_at: "2026-05-03T10:00:00Z",
-  },
-  {
-    id: "2",
-    full_name: "María Gómez",
-    document_id: "87654321",
-    diagnosis: "Hipertensión",
-    blood_type: "A-",
-    created_at: "2026-05-07T12:30:00Z",
-  },
-]
-
-const examsCount = 27
-
 const Home = () => {
+    const [list, setList] = useState<Patient[]>([])
+    const user = JSON.parse(localStorage.getItem('user') || '{}')
+
+    useEffect(() => {
+        if (!localStorage.getItem('user')) {
+            window.location.href = '/auth/login'
+        }
+    
+        const pacients = async () => {
+            const response = await api.get('/pacients')
+
+            if (response.status === 200) {
+                const data = response.data;
+                const pacients = Array.isArray(data)
+                    ? data
+                    : data.pacients || data.patients || data.results || data.data || [];
+
+                setList(pacients)
+            } else {
+                alert('Error al cargar pacientes')
+            }
+        }
+        
+        pacients()
+    }, [])
+
   const stats = [
     { icon: Users, label: "Pacientes totales", value: list.length, color: "text-primary", bg: "bg-primary-soft" },
-    { icon: FileText, label: "Reportes generados", value: 18, color: "text-success", bg: "bg-success/10" },
-    { icon: Activity, label: "Exámenes registrados", value: examsCount, color: "text-warning", bg: "bg-warning/15" },
-    { icon: TrendingUp, label: "Esta semana", value: list.filter((p) => Date.now() - new Date(p.created_at).getTime() < 7 * 86400000).length, color: "text-accent-foreground", bg: "bg-accent" },
+    { icon: FileText, label: "Reportes generados", value: 0, color: "text-success", bg: "bg-success/10" },
+    { icon: Activity, label: "Exámenes registrados", value: 0, color: "text-warning", bg: "bg-warning/15" },
   ]
 
   return (
@@ -41,12 +52,12 @@ const Home = () => {
       <header className="flex items-start justify-between mb-8">
         <div>
           <p className="text-sm text-muted-foreground">¡Hola de nuevo!</p>
-          <h1 className="font-display font-bold text-3xl mt-1">{user.full_name}</h1>
-          <p className="text-muted-foreground mt-1">{user.role} · {user.hospital}</p>
+          <h1 className="font-display font-bold text-3xl mt-1">{user.username}</h1>
+          <p className="text-muted-foreground mt-1">{user.role} · Centro Hospital Cardón </p>
         </div>
         <Link
           to="/dashboard/patients/new"
-          className="inline-flex items-center rounded-full bg-primary px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-primary/90"
+          className="inline-flex bg-[#3b82f6] items-center rounded-full px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-primary/90"
         >
           <UserPlus className="h-4 w-4 mr-2" />
           Nuevo paciente
@@ -72,18 +83,17 @@ const Home = () => {
             Ver todos <ArrowRight className="h-3.5 w-3.5" />
           </Link>
         </div>
-        <ul className="divide-y divide-border/50">
+        <ul className="divide-y divide-border/50 overflow-y">
           {list.slice(0, 5).map((p) => (
             <li key={p.id}>
               <Link to={`/dashboard/patients/${p.id}`} className="px-6 py-4 flex items-center gap-4 hover:bg-muted/40 transition-colors">
                 <div className="h-10 w-10 rounded-full bg-primary-soft text-primary grid place-items-center font-bold">
-                  {p.full_name.split(" ").map((n) => n[0]).slice(0, 2).join("")}
+                  {p.name?.split(" ").map((n) => n[0]).slice(0, 2).join("")}
                 </div>
                 <div className="flex-1">
-                  <div className="font-medium">{p.full_name}</div>
-                  <div className="text-xs text-muted-foreground">CC {p.document_id} · {p.diagnosis || "Sin diagnóstico"}</div>
+                  <div className="font-medium">{p.name}</div>
+                  <div className="text-xs text-muted-foreground"> C.I: {p.cedula} · Genero: {p.gender} · Telefono: {p.phone} </div>
                 </div>
-                <div className="text-xs text-muted-foreground hidden md:block">{p.blood_type}</div>
               </Link>
             </li>
           ))}

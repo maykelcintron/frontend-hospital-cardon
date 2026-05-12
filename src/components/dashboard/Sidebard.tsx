@@ -1,17 +1,32 @@
-import { Link, useNavigate } from 'react-router';
+import { Link, useNavigate, useLocation } from 'react-router';
 import { BrandLogo } from '../brand-logo';
-import { LayoutDashboard, LogOut, UserCircle, Users } from 'lucide-react';
+import { FileText, LayoutDashboard, LogOut, UserCircle, Users } from 'lucide-react';
 import cn from 'clsx'
+import { useEffect } from 'react';
 
 const items = [
   { to: "/dashboard", label: "Resumen", icon: LayoutDashboard, exact: true },
   { to: "/dashboard/patients", label: "Pacientes", icon: Users },
+  { to: "/dashboard/exams", label: "Exámenes", icon: FileText },
   { to: "/dashboard/profile", label: "Perfil", icon: UserCircle },
 ];
 
 const Sidebard = () => {
     const navigate = useNavigate()
-    const path = window.location.pathname;
+    const location = useLocation()
+    const path = location.pathname
+
+    useEffect(() => {
+      if (!localStorage.getItem('user')) {
+        navigate('/auth/login')
+      }
+    }, [navigate])
+
+    const logout = () => {
+      localStorage.removeItem('user')
+      navigate('/auth/login')
+      return
+    }
 
   return (
       <aside className="w-64 shrink-0 bg-sidebar border-r border-sidebar-border flex flex-col">
@@ -29,21 +44,21 @@ const Sidebard = () => {
               className={cn(
                 "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors",
                 active
-                  ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-[var(--shadow-card)]"
+                  ? "bg-[#00839A] text-sidebar-primary-foreground shadow-[var(--shadow-card)]"
                   : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
               )}
             >
-              <item.icon className="h-4 w-4" />
+              <item.icon className="bgh-4 w-4" />
               {item.label}
             </Link>
           );
         })}
       </nav>
 
-      <div className="p-3 border-t border-sidebar-border absolute bottom-0 w-full">
-        <button className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-muted-foreground hover:bg-sidebar-accent hover:text-foreground transition-colors"
+      <div className="p-3 w-full">
+        <button onClick={logout} className="w-full cursor-pointer text-red-500 flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors"
         >
-          <LogOut className="h-4 w-4" />
+          <LogOut className="h-4 w-4 text-red-500" />
           Cerrar sesión
         </button>
       </div>
